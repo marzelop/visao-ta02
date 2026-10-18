@@ -1,0 +1,14 @@
+\section{Introdução}
+
+A calibração de uma câmera estima os parâmetros que relacionam pontos de uma
+cena às suas posições na imagem. A matriz intrínseca reúne as distâncias focais
+em pixels e o ponto principal; os coeficientes de distorção representam desvios
+em relação ao modelo de projeção ideal. Esses parâmetros permitem corrigir
+deformações geométricas e projetar pontos tridimensionais em coordenadas de
+imagem, conforme os procedimentos do OpenCV~\cite{opencv-tutorial,opencv-calib3d}.
+
+Neste trabalho, foram calibradas duas câmeras de um smartphone. Os parâmetros
+obtidos foram aplicados à correção de fotografias de teste e à projeção de
+pontos de um tabuleiro. O principal experimento quantitativo utiliza novas
+fotografias, não incluídas na calibração, e compara posições observadas e
+previstas de quatro cantos reservados da estimação da pose em cada imagem.

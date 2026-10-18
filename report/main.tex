@@ -1,0 +1,57 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,booktabs,graphicx}
+\usepackage{microtype,caption,placeins,float}
+\usepackage[hidelinks]{hyperref}
+\graphicspath{{images/}}
+\captionsetup{font=small,labelfont=normalfont}
+\setlength{\textfloatsep}{12pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\setlength{\parskip}{1pt}
+\setlength{\emergencystretch}{1em}
+\hypersetup{pdftitle={Visão Computacional TA02 - Calibração},
+  pdfsubject={Relatório de Visão Computacional},pdflang={pt-BR}}
+
+% Edit the two author names and repository URL before submission.
+\title{\Large Visão Computacional TA02 - Calibração}
+\author{Marcelo Gyovani Pereira \and Vinícius Evair da Silva}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-1.5em}
+\begin{center}
+  \small Repositório:
+  \url{https://github.com/USUARIO/REPOSITORIO}
+\end{center}
+
+\input{sections/introduction}
+\input{sections/methodology}
+\FloatBarrier
+\input{sections/calibration}
+\FloatBarrier
+\input{sections/undistortion}
+\FloatBarrier
+\input{sections/projection}
+\FloatBarrier
+\input{sections/conclusion}
+
+\begin{thebibliography}{9}
+\small
+\bibitem{opencv-tutorial}
+OPENCV. \textit{Camera Calibration}. OpenCV-Python Tutorials.
+Disponível em:
+\url{https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html}.
+Acesso em: 17 out. 2026.
+
+\bibitem{opencv-calib3d}
+OPENCV. \textit{Camera Calibration and 3D Reconstruction}.
+Documentação do módulo calib3d. Disponível em:
+\url{https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html}.
+Acesso em: 17 out. 2026.
+\end{thebibliography}
+\end{document}

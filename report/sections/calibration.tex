@@ -1,0 +1,76 @@
+\section{Calibração das câmeras}
+
+A calibração final utilizou 22 fotografias da câmera 1x e 20 da câmera 0,5x.
+Conforme o histórico experimental informado, a primeira calibração da câmera
+0,5x empregou as 22 fotografias; as imagens 019 e 022 apresentaram
+os maiores erros individuais e foram retiradas manualmente. Após essa seleção,
+o RMS passou de aproximadamente $1{,}686$ para $1{,}463$ pixel. Os arquivos
+atuais registram o ajuste final com 20 imagens, sem novos descartes na execução.
+
+Os arquivos \texttt{calibration.npz} e \texttt{log.txt}, nos diretórios de cada
+câmera, registram os mesmos parâmetros. As matrizes intrínsecas, em pixels, são
+\begin{equation}
+K_{1\mathrm{x}}=
+\begin{bmatrix}
+2715{,}936 & 0 & 1484{,}581\\
+0 & 2706{,}305 & 1520{,}002\\
+0 & 0 & 1
+\end{bmatrix},
+\label{eq:k1}
+\end{equation}
+\begin{equation}
+K_{0{,}5\mathrm{x}}=
+\begin{bmatrix}
+1600{,}726 & 0 & 1586{,}526\\
+0 & 1596{,}602 & 1494{,}484\\
+0 & 0 & 1
+\end{bmatrix}.
+\label{eq:k05}
+\end{equation}
+As menores distâncias focais em pixels da câmera 0,5x são compatíveis com seu
+enquadramento mais amplo; não representam medidas físicas em milímetros.
+
+\begin{table}[H]
+  \centering
+  \caption{Resultados do ajuste final. Os erros são expressos em pixels.}
+  \label{tab:calibration}
+  \begin{tabular}{lrrr}
+    \toprule
+    Câmera & Imagens & RMS & Erro médio euclidiano\\
+    \midrule
+    Principal (1x) & 22 & 0,910 & 0,667\\
+    Ultra-angular (0,5x) & 20 & 1,463 & 1,168\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+A Tabela~\ref{tab:distortion} apresenta os coeficientes adimensionais na
+convenção do OpenCV: $k_1$, $k_2$ e $k_3$ são radiais; $p_1$ e $p_2$ são
+tangenciais. A notação científica mantém visíveis os coeficientes de menor
+magnitude.
+\begin{table}[H]
+  \centering
+  \caption{Coeficientes de distorção das duas câmeras.}
+  \label{tab:distortion}
+  \begin{tabular}{lrr}
+    \toprule
+    Coeficiente & Principal (1x) & Ultra-angular (0,5x)\\
+    \midrule
+    $k_1$ & $1{,}041\times10^{-1}$ & $-1{,}245\times10^{-2}$\\
+    $k_2$ & $-3{,}006\times10^{-1}$ & $3{,}508\times10^{-2}$\\
+    $k_3$ & $9{,}202\times10^{-5}$ & $1{,}756\times10^{-2}$\\
+    $p_1$ & $2{,}460\times10^{-3}$ & $8{,}152\times10^{-4}$\\
+    $p_2$ & $1{,}630\times10^{-3}$ & $1{,}142\times10^{-2}$\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+O RMS é a raiz da média das distâncias de reprojeção ao quadrado. O erro médio
+é a média das distâncias euclidianas entre cantos detectados e reprojetados.
+Com 16 pontos por imagem, a média das médias por imagem coincide com a global.
+
+A câmera principal apresentou menor erro nas duas medidas da
+Tabela~\ref{tab:calibration}. Campo de visão, tamanho do padrão na imagem,
+localização dos cantos e adequação do modelo são possíveis fatores para essa
+diferença, mas não foram isolados experimentalmente. Além disso, a redução do
+RMS após retirar imagens da câmera 0,5x mede o ajuste ao conjunto selecionado.
