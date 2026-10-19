@@ -89,33 +89,6 @@ esse valor conforme o tabuleiro utilizado, mantendo a mesma unidade em todo o
 conjunto. Se a medida física for desconhecida, use `1.0` como unidade arbitrária
 e ajuste a indicação de unidade no relatório.
 
-## Cálculo realizado
-
-Os 16 cantos são encontrados com `cv2.findChessboardCorners()`, usando
-`cv2.findChessboardCornersSB()` como alternativa quando necessário, e refinados
-com `cv2.cornerSubPix()`. Os pontos correspondentes do tabuleiro pertencem a um
-plano com coordenada Z igual a zero e espaçamento definido por `SQUARE_SIZE`.
-
-`cv2.calibrateCamera()` estima a matriz intrínseca, que contém as distâncias
-focais `fx`, `fy` e o ponto principal `cx`, `cy` em pixels, além dos coeficientes
-de distorção `k1, k2, p1, p2, k3` e da pose do tabuleiro em cada fotografia.
-
-Para cada imagem utilizada, `cv2.projectPoints()` reprojeta os 16 pontos do
-tabuleiro com os parâmetros estimados. O erro informado é a **média das
-distâncias euclidianas** entre cada canto detectado e seu ponto reprojetado:
-
-```text
-error_i = mean(sqrt((u_detected - u_projected)^2 + (v_detected - v_projected)^2))
-```
-
-Os erros são medidos em pixels. Também são informados a média desses erros por
-imagem e o RMS retornado pelo OpenCV. O RMS é a raiz da média das distâncias
-euclidianas ao quadrado entre todos os pontos; portanto, difere da média das
-distâncias. Nenhuma fotografia é excluída automaticamente por erro elevado.
-
-A reprojeção acima serve para medir o erro do ajuste da calibração. O experimento
-de projeção com pontos reservados para validação está descrito ao final deste README.
-
 ## Resultados
 
 O script cria `results/<camera_id>/` automaticamente e imprime o relatório no
@@ -131,7 +104,7 @@ terminal. Para `cam1`, os arquivos são:
 - `results/cam1/corners/`: fotografias utilizadas com os 16 cantos desenhados,
   preservando a resolução original e os nomes dos arquivos.
 
-Uma nova execução sobrescreve os arquivos de mesmo nome. Os parâmetros podem
+Uma nova execução sobrescreve os arquivos. Os parâmetros podem
 ser lidos posteriormente com `numpy.load("results/cam1/calibration.npz")`.
 
 ## Remoção de distorção
@@ -200,127 +173,3 @@ O argumento `camera_id` é opcional; para processar apenas uma câmera, execute:
 python project.py cam05
 python project.py cam1
 ```
-
-O script carrega `camera_matrix`, `dist_coeffs` e `image_size` de
-`results/<camera_id>/calibration.npz`, sem recalcular a calibração. Usa
-as fotografias originais de `images/<camera_id>/` e, quando presentes,
-`project_test/<camera_id>/`, na resolução original. A
-detecção e o refinamento dos 16 cantos seguem os mesmos métodos, parâmetros e
-ordenação usados em `calibrate.py`.
-
-Os pontos 3D são definidos em centímetros, com quadrados de **3,1 cm** e Z igual
-a zero. O índice segue a ordem `index = 4 * row + column`, com X variando primeiro:
-
-```text
- 0   1   2   3
- 4   5   6   7
- 8   9  10  11
-12  13  14  15
-```
-
-A origem é o canto de índice 0, com X e Y seguindo as colunas e linhas detectadas.
-**Essas coordenadas pertencem ao sistema de referência do tabuleiro, não a um
-sistema global de coordenadas.** Como o padrão é simétrico, a orientação atribuída
-pelo detector pode mudar entre fotografias. A pose é estimada individualmente
-para cada fotografia e transforma o referencial do tabuleiro para o da câmera.
-
-Os quatro cantos extremos, índices **0, 3, 12 e 15**, são reservados exclusivamente
-para validação. Os outros **12 pontos**, distribuídos pelas quatro linhas e
-colunas da grade, fornecem as correspondências 3D e 2D conhecidas para uma única
-chamada a `cv2.solvePnP()`, com `SOLVEPNP_ITERATIVE`. A divisão é fixa e determinística.
-Os pontos de validação não entram na estimação nem em um refinamento posterior
-da pose.
-
-`cv2.projectPoints()` projeta apenas os quatro pontos reservados usando a pose,
-a matriz intrínseca e a distorção originais. A comparação é feita com seus cantos
-detectados na **mesma fotografia original**, sem usar imagens de `undistort.py`.
-A validação verifica correspondências que não participaram da estimação da pose.
-No conjunto `images/`, essas fotografias também podem ter sido usadas na
-calibração; essa separação, por si só, não constitui uma avaliação em fotografias
-independentes. As novas fotografias de `project_test/` permitem repetir o
-procedimento sem terem participado da calibração intrínseca.
-
-Para cada ponto reservado, o erro é a distância euclidiana em pixels. As métricas
-globais são calculadas diretamente de todos os erros individuais da câmera:
-
-```text
-error = sqrt((u_observed - u_projected)^2 + (v_observed - v_projected)^2)
-mean_error = mean(errors)
-RMSE = sqrt(mean(errors^2))
-maximum_error = max(errors)
-```
-
-O RMSE global não é calculado pela média dos RMSEs por fotografia. O terminal
-mostra as contagens, os conjuntos de índices, as métricas globais e o erro médio
-de cada imagem. Fotografias ilegíveis, sem tabuleiro detectável ou sem pose válida
-são informadas como descartadas. Erros elevados não causam exclusão automática.
-
-Os resultados são gravados em `results/<camera_id>/projections/`:
-
-- Fotografias com os nomes originais: os 12 cantos de pose aparecem como círculos
-  verdes; os quatro cantos observados de validação, como anéis azuis; suas projeções,
-  como cruzes vermelhas. Linhas amarelas conectam cada observação à sua projeção.
-  Os rótulos mostram o índice e o erro em pixels. Os marcadores são ampliados para
-  facilitar a visualização; somente o desenho arredonda coordenadas para pixels.
-- `points.csv`: quatro linhas por imagem utilizada, uma por ponto de validação,
-  com nome da imagem, índice de 0 a 15, X/Y/Z em centímetros, coordenadas 2D
-  observadas e projetadas em pixels, e erro euclidiano. As coordenadas mantêm
-  precisão de subpixel.
-- `summary.txt`: configuração, contagens, índices, métricas globais, médias por
-  imagem, descartes e legenda das cores.
-
-Na execução com as calibrações existentes, todas as fotografias disponíveis
-tiveram o tabuleiro detectado e a pose estimada, sem descartes. Os erros abaixo
-correspondem somente aos quatro pontos reservados de cada imagem:
-
-| Câmera | Imagens utilizadas | Pontos de validação | Erro médio (px) | RMSE (px) | Erro máximo (px) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| cam05 | 20/20 | 80 | 2,111742 | 2,562593 | 6,119383 |
-| cam1 | 22/22 | 88 | 1,121420 | 1,575436 | 5,121168 |
-
-Os valores completos e os erros por fotografia estão nos arquivos `summary.txt`
-e `points.csv` de cada câmera. Novas imagens ou calibrações podem alterar os
-resultados de uma execução futura.
-
-### Projeção nas fotografias independentes
-
-Coloque as novas fotografias do tabuleiro em `project_test/<camera_id>/`,
-mantendo-as fora de `images/<camera_id>/`. O mesmo comando `python project.py cam1`
-processa os dois conjuntos com a calibração existente. Sem argumento,
-`python project.py` faz isso para todas as câmeras, incluindo as fotografias
-independentes de cada uma quando disponíveis. A detecção, a seleção de
-12 pontos de pose e quatro de validação e as métricas são idênticas nos dois
-conjuntos. Os novos arquivos não são fornecidos a `calibrate.py`.
-
-As imagens anotadas, `points.csv` e `summary.txt` do conjunto independente são
-gravados em `results/<camera_id>/projections/tests/`. O arquivo
-`results/<camera_id>/projections/comparison.txt` compara erro médio, RMSE e erro
-máximo entre os conjuntos, incluindo as diferenças absolutas e percentuais.
-Os erros dos conjuntos são calculados separadamente, sem misturar as amostras.
-
-Essa comparação avalia a projeção em fotografias não usadas na calibração,
-embora a pose de cada nova fotografia continue sendo estimada a partir de seus
-12 cantos conhecidos. Diferenças de posição, distância e inclinação do tabuleiro
-podem influenciar os resultados. Poucas imagens de teste permitem descrever o
-resultado observado, mas não sustentam uma conclusão ampla de generalização.
-
-Na execução com as três novas fotografias de cada câmera, todas foram utilizadas
-e produziram 12 pontos de validação por câmera, sem descartes. Os arquivos de
-calibração foram preservados. Os resultados obtidos foram:
-
-| Câmera | Conjunto | Imagens | Erro médio (px) | RMSE (px) | Erro máximo (px) |
-| --- | --- | ---: | ---: | ---: | ---: |
-| cam1 | Fotografias da calibração | 22 | 1,121420 | 1,575436 | 5,121168 |
-| cam1 | Novas fotografias | 3 | 2,839328 | 4,060751 | 9,162294 |
-| cam05 | Fotografias da calibração | 20 | 2,111742 | 2,562593 | 6,119383 |
-| cam05 | Novas fotografias | 3 | 2,417905 | 3,060062 | 6,820997 |
-
-O aumento do erro médio foi de 1,717908 px (+153,19%) na `cam1` e de 0,306163 px
-(+14,50%) na `cam05`. O RMSE aumentou 157,75% e 19,41%, respectivamente.
-Nesta amostra, a diferença foi maior na câmera principal; isso não demonstra
-que ela terá pior desempenho em qualquer conjunto independente. As três imagens
-de cada câmera têm condições próprias de captura, e a pose continua sendo
-estimada individualmente com os mesmos 12 cantos.
-
-Referências: [calibração e projeção no OpenCV](https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html)
-e [estimação de pose com solvePnP](https://docs.opencv.org/4.x/d5/d1f/calib3d_solvePnP.html).
